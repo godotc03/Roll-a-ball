@@ -2,38 +2,54 @@
 
 // Include the namespace required to use Unity UI
 using UnityEngine.UI;
+using UnityEngine.Networking;
 
 using System.Collections;
 
-public class PlayerController : MonoBehaviour {
-	
-	// Create public variables for player speed, and for the Text UI game objects
-	public float speed;
-	public Text countText;
-	public Text winText;
+public class PlayerController : MonoBehaviour
+{
 
-	// Create private references to the rigidbody component on the player, and the count of pick up objects picked up so far
-	private Rigidbody rb;
-	private int count;
+    //DLC Test
+    private string CDN_URL = "http://localhost:3000";
+    private string Version = "v1.1.1";
+    private string Local_CDN_URL = "";
+    //private string[] fileList = { "dlc_v1.ab"};
 
-	// At the start of the game..
-	void Start ()
-	{
-		// Assign the Rigidbody component to our private rb variable
-		rb = GetComponent<Rigidbody>();
+    //end of DLC Test
+    // Create public variables for player speed, and for the Text UI game objects
+    public float speed;
+    public Text countText;
+    public Text winText;
 
-		// Set the count to zero 
-		count = 0;
+    // Create private references to the rigidbody component on the player, and the count of pick up objects picked up so far
+    private Rigidbody rb;
+    private int count;
 
-		// Run the SetCountText function to update the UI (see below)
-		SetCountText ();
+    // At the start of the game..
+    void Start()
+    {
+        // Assign the Rigidbody component to our private rb variable
+        rb = GetComponent<Rigidbody>();
 
-		// Set the text property of our Win Text UI to an empty string, making the 'You Win' (game over message) blank
-		winText.text = "";
-	}
+        // Set the count to zero 
+        count = 0;
 
-	// Each physics step..
-	void FixedUpdate ()
+        // Run the SetCountText function to update the UI (see below)
+        SetCountText();
+
+        // Set the text property of our Win Text UI to an empty string, making the 'You Win' (game over message) blank
+        winText.text = "";
+
+#if UNITY_EDITOR_WIN
+        Local_CDN_URL = "file:///" + Application.dataPath + "/FakeServer/";
+#elif UNITY_EDITOR_OSX
+        Local_CDN_URL = "file://" + Application.dataPath + "/../FakeServer/";
+#endif
+        StartCoroutine(DLC_Instance());
+    }
+
+    // Each physics step..
+    void FixedUpdate ()
 	{
 		// Set some local float variables equal to the value of our Horizontal and Vertical Inputs
 		float moveHorizontal = Input.GetAxis ("Horizontal");
@@ -78,4 +94,26 @@ public class PlayerController : MonoBehaviour {
 			winText.text = "You Win!";
 		}
 	}
+
+    private IEnumerator DLC_Instance()
+    {
+        string url = CDN_URL + "/" + Version + "/dlc_v1.ab";
+        UnityWebRequest request = UnityWebRequestAssetBundle.GetAssetBundle(url, 0);
+        yield return request.SendWebRequest();
+        if(request.isHttpError)
+        {
+            url = Local_CDN_URL + "/" + Version + "/dlc_v1.ab";
+            request = UnityWebRequestAssetBundle.GetAssetBundle(url, 0);
+            yield return request.SendWebRequest();
+        }
+        if (!request.isHttpError)
+        {
+            AssetBundle bundle = DownloadHandlerAssetBundle.GetContent(request);
+            GameObject cube = bundle.LoadAsset<GameObject>("Cube");
+            Instantiate(cube,new Vector3(2f,0.5f,0f),Quaternion.identity);
+        }
+        else{
+            Debug.Log("can't load assetbundle: dlc_v1.ab");
+        }
+    }
 }
