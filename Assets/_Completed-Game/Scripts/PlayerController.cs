@@ -97,15 +97,11 @@ public class PlayerController : MonoBehaviour
 
     private IEnumerator DLC_Instance()
     {
-        string url = CDN_URL + "/" + Version + "/dlc_v1.ab";
+        //string url = CDN_URL + "/" + Version + "/dlc_v1.ab";      //use http://v
+        string url = Local_CDN_URL + "/" + Version + "/dlc_v1.ab";  //use local fake server
         UnityWebRequest request = UnityWebRequestAssetBundle.GetAssetBundle(url, 0);
         yield return request.SendWebRequest();
-        if(request.isHttpError)
-        {
-            url = Local_CDN_URL + "/" + Version + "/dlc_v1.ab";
-            request = UnityWebRequestAssetBundle.GetAssetBundle(url, 0);
-            yield return request.SendWebRequest();
-        }
+
         if (!request.isHttpError)
         {
             AssetBundle bundle = DownloadHandlerAssetBundle.GetContent(request);
