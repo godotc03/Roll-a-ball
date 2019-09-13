@@ -3,8 +3,8 @@
 // Include the namespace required to use Unity UI
 using UnityEngine.UI;
 using UnityEngine.Networking;
-
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
@@ -14,6 +14,7 @@ public class PlayerController : MonoBehaviour
     private string Version = "v1.1.1";
     private string Local_CDN_URL = "";
     //private string[] fileList = { "dlc_v1.ab"};
+    private AssetBundle scene_bundle = null;
 
     //end of DLC Test
     // Create public variables for player speed, and for the Text UI game objects
@@ -92,13 +93,23 @@ public class PlayerController : MonoBehaviour
 		{
 			// Set the text value of our 'winText'
 			winText.text = "You Win!";
-		}
+            if(scene_bundle != null)
+            {
+                string[] scenePaths = scene_bundle.GetAllScenePaths();
+                if(scenePaths.Length > 0){
+                    string sceneName = System.IO.Path.GetFileNameWithoutExtension(scenePaths[0]);
+                    SceneManager.LoadScene(sceneName);
+                }
+            }
+        }
 	}
 
     private IEnumerator DLC_Instance()
     {
-        //string url = CDN_URL + "/" + Version + "/dlc_v1.ab";      //use http://v
-        string url = Local_CDN_URL + "/" + Version + "/dlc_v1.ab";  //use local fake server
+        //string CDN = CDN_URL + "/";      //use http://v
+        string CDN = Local_CDN_URL + "/";  //use local fake server
+        string url = CDN + Version + "/dlc_v1.ab";
+
         UnityWebRequest request = UnityWebRequestAssetBundle.GetAssetBundle(url, 0);
         yield return request.SendWebRequest();
 
@@ -110,6 +121,18 @@ public class PlayerController : MonoBehaviour
         }
         else{
             Debug.Log("can't load assetbundle: dlc_v1.ab");
+        }
+
+        url = CDN + Version + "/dlc_v1_scene.ab";
+        request = UnityWebRequestAssetBundle.GetAssetBundle(url, 0);
+        yield return request.SendWebRequest();
+        if(!request.isHttpError)
+        {
+            scene_bundle = DownloadHandlerAssetBundle.GetContent(request);
+        }
+        else
+        {
+            Debug.Log("can't load assetbundle: dlc_v1_scene.ab");
         }
     }
 }
