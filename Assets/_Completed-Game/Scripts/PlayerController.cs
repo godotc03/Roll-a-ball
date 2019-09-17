@@ -42,7 +42,7 @@ public class PlayerController : MonoBehaviour
         winText.text = "";
 
 #if UNITY_EDITOR_WIN
-        Local_CDN_URL = "file:///" + Application.dataPath + "/FakeServer/";
+        Local_CDN_URL = "file:///" + Application.dataPath + "/../FakeServer/";
 #elif UNITY_EDITOR_OSX
         Local_CDN_URL = "file://" + Application.dataPath + "/../FakeServer/";
 #endif
@@ -133,6 +133,7 @@ public class PlayerController : MonoBehaviour
         else
         {
             Debug.Log("can't load assetbundle: dlc_v1_scene.ab");
+            Debug.Log("error:"+ request.error);
         }
     }
 }
